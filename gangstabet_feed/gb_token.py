@@ -14,12 +14,13 @@ class GBToken:
         self.address = txInfo.address[:8] + ".." + txInfo.address[34:]
         
         # get common attributes
+        self.id = int(tokenInfo["id"])
         self.name = str(tokenInfo["name"])
         self.index = int(tokenInfo["index"])
         self.type = str(tokenInfo["type"])
         self.class_name = str(tokenInfo["class"])
         self.image_url = tokenInfo["image_url"]
-        self.external_url = "https://gangstabet.io/profile/" + str(tokenInfo["index"])
+        self.external_url = "https://gangstabet.io/profile/" + str(tokenInfo["id"])
         self.timestamp = txInfo.timestamp
         self.info = "\n"
 

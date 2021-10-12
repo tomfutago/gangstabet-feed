@@ -31,10 +31,14 @@ def call(to, method, params):
 
 #block_height = 40806971
 #block_height = 40806977
+#block_height = 40731695 # failure
 #block = icon_service.get_block(block_height)
 #print(json.dumps(block, indent = 4))
+#txHash = "0xfad47e254414893ab812cdc46968178cb6456cd9a45163e256c260a0dd4eb95e"
+#txResult = icon_service.get_transaction_result(txHash)
+#print(txResult)
 
-block_height = 40731480 # start block with first claimed GBs
+block_height = 40731481 # start block with first claimed GBs
 
 while True:
     try:
@@ -83,6 +87,7 @@ while True:
                             token = gb_token.GBToken(txInfoCurrent, tokenInfo)
 
                             if len(token.info) > 0:
+                                sleep(2)
                                 webhook = DiscordWebhook(url=token.discord_webhook)
                                 embed = DiscordEmbed(title=token.title, description=token.generate_discord_info(), color=token.set_color())
                                 embed.set_thumbnail(url=token.image_url)

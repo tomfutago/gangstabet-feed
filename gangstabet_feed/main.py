@@ -87,7 +87,7 @@ while True:
                             token = gb_token.GBToken(txInfoCurrent, tokenInfo)
 
                             if len(token.info) > 0:
-                                sleep(2)
+                                sleep(3)
                                 webhook = DiscordWebhook(url=token.discord_webhook)
                                 embed = DiscordEmbed(title=token.title, description=token.generate_discord_info(), color=token.set_color())
                                 embed.set_thumbnail(url=token.image_url)

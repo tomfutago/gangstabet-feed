@@ -20,7 +20,7 @@ class GBToken:
         self.index = int(tokenInfo["index"])
         self.type = str(tokenInfo["type"])
         self.class_name = str(tokenInfo["class"])
-        self.nft_update = str(tokenInfo["nft_update"])
+        self.nft_update = txInfo.nft_update
         self.image_url = tokenInfo["image_url"]
         self.external_url = "https://gangstabet.io/profile/" + str(tokenInfo["id"])
         self.timestamp = txInfo.timestamp
@@ -40,23 +40,24 @@ class GBToken:
             self.footer = "Created on "
             self.info += "\nHappy owner: " + self.address
             self.info += "\nPrice: " + txInfo.cost
-        elif "claim_allocated_amt":
+        elif txInfo.method == "claim_allocated_amt":
             self.title = "GBET tokens claimed!"
             self.footer = "Claimed on "
             self.info += "\nAddress: " + self.address
-            self.info += "\nPrice: " + txInfo.get_transfer_gbet()
-        elif "change_name":
+            self.info += "\nClaimed: " + txInfo.get_transfer_gbet()
+        elif txInfo.method == "change_name":
             self.title = "GangstaBet name changed!"
             self.footer = "Changed on "
             self.info += "\nAddress: " + self.address
             self.info += "\nPrice: " + txInfo.get_transfer_gbet()
-        elif "increase_status_level":
+        elif txInfo.method == "increase_status_level":
             self.title = "GangstaBet upgraded!"
             self.footer = "Upgraded on "
             self.info += "\nAddress: " + self.address
             self.info += "\nPrice: " + txInfo.get_transfer_gbet()
             self.info += "\n"
-            self.info += "\nSkills levelled up:" + self.get_skills_upgrade()
+            self.info += "\nSkills levelled up:"
+            self.info += "\n" + self.get_skills_upgrade()
         
         self.info += "\n[Check it out](" + self.external_url + ")"
 

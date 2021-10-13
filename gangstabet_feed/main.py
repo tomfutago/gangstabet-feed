@@ -26,9 +26,6 @@ def call(to, method, params):
     return result
 
 
-# latest block height
-#block_height = icon_service.get_block("latest")["height"]
-
 #block_height = 40806977
 #block_height = 40731695 # failure
 #block_height = 40848877
@@ -39,7 +36,12 @@ def call(to, method, params):
 #print(txResult["eventLogs"])
 
 
-block_height = 40731481 # start block with first claimed GBs
+# latest block height
+block_height = icon_service.get_block("latest")["height"]
+
+#block_height = 40731481 # start block with first claimed GBs
+#block_height = 40858594 # fairly recent
+#block_height = 40861708
 
 while True:
     try:
@@ -49,14 +51,14 @@ while True:
         sleep(2)
         continue
     else:
-        #try:
+        try:
             for tx in block["confirmed_transaction_list"]:
                 if "to" in tx:
                     if tx["to"] == GangstaBetCx or tx["to"] == GangstaBetSkillCx:
-                        #try:
+                        try:
                             # check if tx uses expected method - if not skip and move on
                             method = tx["data"]["method"]
-                            print("block:", block_height, "method:", method, "processing..")
+                            #print("block:", block_height, "method:", method, "processing..")
 
                             expected_methods = ["set_nft_characters", "change_name", "claim_allocated_amt", "increase_status_level"]
                             if method not in expected_methods:
@@ -78,8 +80,9 @@ while True:
                             #tokenInfo = requests.get(txInfoCurrent.get_gb_apiurl()).json()
                             #tokenCharacterInfo = call(txInfoCurrent.contract, "get_character_info", {"nft_id": txInfoCurrent.get_gb_id()})
 
+                            if txInfoCurrent.contract == GangstaBetSkillCx:
+                                txInfoCurrent.contract = GangstaBetCx
                             tokenInfo = requests.get(call(txInfoCurrent.contract, "tokenURI", {"_id": txInfoCurrent.nft_id})).json()
-                            print("past TokenInfo..")
 
                             # check if json ok - if not skip and move on
                             if "error" in tokenInfo:
@@ -89,10 +92,10 @@ while True:
 
                             # get token info
                             token = gb_token.GBToken(txInfoCurrent, tokenInfo)
-                            print("past GBToken..")
 
                             if len(token.info) > 0:
-                                sleep(3)
+                                sleep(5)
+                                #print(token.image_url)
                                 webhook = DiscordWebhook(url=token.discord_webhook)
                                 embed = DiscordEmbed(title=token.title, description=token.generate_discord_info(), color=token.set_color())
                                 embed.set_thumbnail(url=token.image_url)
@@ -100,14 +103,11 @@ while True:
                                 embed.set_timestamp(token.timestamp)
                                 webhook.add_embed(embed)
                                 response = webhook.execute()
-                                print("past sending to discord..")
-                        #except:
-                        #    print("Error: {}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno))
-                        #    continue
+                        except:
+                            print("Error: {}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno))
+                            continue
 
             block_height += 1
-            if block_height == 40731481+10:
-                break
-        #except:
-        #    sleep(2)
-        #    continue
+        except:
+            sleep(2)
+            continue

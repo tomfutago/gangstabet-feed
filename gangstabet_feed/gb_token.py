@@ -1,7 +1,8 @@
 import os
 import json
-from gangstabet_feed import icx_tx
 from dotenv import load_dotenv
+
+from gangstabet_feed import icx_tx
 
 # load env variables
 is_heroku = os.getenv("IS_HEROKU", None)
@@ -19,6 +20,7 @@ class GBToken:
         self.index = int(tokenInfo["index"])
         self.type = str(tokenInfo["type"])
         self.class_name = str(tokenInfo["class"])
+        self.nft_update = str(tokenInfo["nft_update"])
         self.image_url = tokenInfo["image_url"]
         self.external_url = "https://gangstabet.io/profile/" + str(tokenInfo["id"])
         self.timestamp = txInfo.timestamp
@@ -27,6 +29,8 @@ class GBToken:
         # set destination discord channel
         if txInfo.method == "set_nft_characters":
             self.discord_webhook = os.getenv("DISCORD_MARKET_WEBHOOK")
+        elif txInfo.method == "claim_allocated_amt" or txInfo.method == "change_name" or txInfo.method == "increase_status_level":
+            self.discord_webhook = os.getenv("DISCORD_SKILLS_WEBHOOK")
         else:
             self.discord_webhook = os.getenv("DISCORD_LOG_WEBHOOK")
 
@@ -35,6 +39,24 @@ class GBToken:
             self.title = "GangstaBet created!"
             self.footer = "Created on "
             self.info += "\nHappy owner: " + self.address
+            self.info += "\nPrice: " + txInfo.cost
+        elif "claim_allocated_amt":
+            self.title = "GBET tokens claimed!"
+            self.footer = "Claimed on "
+            self.info += "\nAddress: " + self.address
+            self.info += "\nPrice: " + txInfo.get_transfer_gbet()
+        elif "change_name":
+            self.title = "GangstaBet name changed!"
+            self.footer = "Changed on "
+            self.info += "\nAddress: " + self.address
+            self.info += "\nPrice: " + txInfo.get_transfer_gbet()
+        elif "increase_status_level":
+            self.title = "GangstaBet upgraded!"
+            self.footer = "Upgraded on "
+            self.info += "\nAddress: " + self.address
+            self.info += "\nPrice: " + txInfo.get_transfer_gbet()
+            self.info += "\n"
+            self.info += "\nSkills levelled up:" + self.get_skills_upgrade()
         
         self.info += "\n[Check it out](" + self.external_url + ")"
 
@@ -45,6 +67,20 @@ class GBToken:
         #self.attributes = ', '.join(attributesList)
 
         # todo: additionalCounterpart
+
+    def get_skills_upgrade(self) -> str:
+        s = self.nft_update.replace('{', '').replace('}', '').replace('"', '')
+
+        if self.type == "Gangster":
+            skills = ["racketeering", "shooting", "gambling", "intelligence", "strategy"]
+        elif self.type == "Detective":
+            skills = ["logic", "critical thinking", "incorruptible", "attention to detail", "intelligence"]
+
+        for n in range(5):
+            s = s.replace(str(n+1) + ":", skills[n] + ": ")
+
+        skills_print_out = "\n".join(str(v) for v in s.split(","))
+        return skills_print_out
 
     def generate_discord_info(self) -> str:
         # create discord info output

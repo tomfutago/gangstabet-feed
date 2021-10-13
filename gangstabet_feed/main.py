@@ -29,14 +29,15 @@ def call(to, method, params):
 # latest block height
 #block_height = icon_service.get_block("latest")["height"]
 
-#block_height = 40806971
 #block_height = 40806977
 #block_height = 40731695 # failure
+#block_height = 40848877
 #block = icon_service.get_block(block_height)
 #print(json.dumps(block, indent = 4))
-#txHash = "0xfad47e254414893ab812cdc46968178cb6456cd9a45163e256c260a0dd4eb95e"
+#txHash = "0xf714c23e791432bfd1e65e109267eca4ba3ec0b420c8d83965720a23cfeca888"
 #txResult = icon_service.get_transaction_result(txHash)
-#print(txResult)
+#print(txResult["eventLogs"])
+
 
 block_height = 40731481 # start block with first claimed GBs
 
@@ -48,16 +49,16 @@ while True:
         sleep(2)
         continue
     else:
-        try:
+        #try:
             for tx in block["confirmed_transaction_list"]:
                 if "to" in tx:
-                    if tx["to"] == GangstaBetCx:
-                        try:
+                    if tx["to"] == GangstaBetCx or tx["to"] == GangstaBetSkillCx:
+                        #try:
                             # check if tx uses expected method - if not skip and move on
                             method = tx["data"]["method"]
-                            #print("block:", block_height, "method:", method, "processing..")
+                            print("block:", block_height, "method:", method, "processing..")
 
-                            expected_methods = ["set_nft_characters"]
+                            expected_methods = ["set_nft_characters", "change_name", "claim_allocated_amt", "increase_status_level"]
                             if method not in expected_methods:
                                 continue
 
@@ -71,11 +72,14 @@ while True:
                                 continue
                             
                             # pull token details - if gb_id cannot be retrieved (-1) skip and move on
-                            if txInfoCurrent.get_gb_id() == -1:
-                                #todo: send to log webhook
-                                continue
-                            tokenInfo = requests.get(txInfoCurrent.get_gb_apiurl()).json()
-                            tokenCharacterInfo = call(txInfoCurrent.contract, "get_character_info", {"nft_id": txInfoCurrent.get_gb_id()})
+                            #if txInfoCurrent.get_gb_id() == -1:
+                            #    #todo: send to log webhook
+                            #    continue
+                            #tokenInfo = requests.get(txInfoCurrent.get_gb_apiurl()).json()
+                            #tokenCharacterInfo = call(txInfoCurrent.contract, "get_character_info", {"nft_id": txInfoCurrent.get_gb_id()})
+
+                            tokenInfo = requests.get(call(txInfoCurrent.contract, "tokenURI", {"_id": txInfoCurrent.nft_id})).json()
+                            print("past TokenInfo..")
 
                             # check if json ok - if not skip and move on
                             if "error" in tokenInfo:
@@ -85,6 +89,7 @@ while True:
 
                             # get token info
                             token = gb_token.GBToken(txInfoCurrent, tokenInfo)
+                            print("past GBToken..")
 
                             if len(token.info) > 0:
                                 sleep(3)
@@ -95,11 +100,14 @@ while True:
                                 embed.set_timestamp(token.timestamp)
                                 webhook.add_embed(embed)
                                 response = webhook.execute()
-                        except:
-                            print("Error: {}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno))
-                            continue
+                                print("past sending to discord..")
+                        #except:
+                        #    print("Error: {}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno))
+                        #    continue
 
             block_height += 1
-        except:
-            sleep(2)
-            continue
+            if block_height == 40731481+10:
+                break
+        #except:
+        #    sleep(2)
+        #    continue

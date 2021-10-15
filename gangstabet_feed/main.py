@@ -1,7 +1,9 @@
+import os
 import sys
 import json
 import requests
 from time import sleep
+from dotenv import load_dotenv
 from iconsdk.icon_service import IconService
 from iconsdk.providers.http_provider import HTTPProvider
 from iconsdk.builder.call_builder import CallBuilder
@@ -10,6 +12,13 @@ from discord_webhook import DiscordWebhook, DiscordEmbed
 
 from gangstabet_feed import icx_tx
 from gangstabet_feed import gb_token
+
+# load env variables
+is_heroku = os.getenv("IS_HEROKU", None)
+if not is_heroku:
+    load_dotenv()
+
+discord_webhook = os.getenv("DISCORD_LOG_WEBHOOK")
 
 # GangstaBet contracts
 GangstaBetCx = "cx384018e03aa8b739472c7a0645b70df97550e2c2"
@@ -80,14 +89,17 @@ while True:
                             #tokenInfo = requests.get(txInfoCurrent.get_gb_apiurl()).json()
                             #tokenCharacterInfo = call(txInfoCurrent.contract, "get_character_info", {"nft_id": txInfoCurrent.get_gb_id()})
 
-                            if txInfoCurrent.contract == GangstaBetSkillCx:
-                                txInfoCurrent.contract = GangstaBetCx
                             tokenInfo = requests.get(call(txInfoCurrent.contract, "tokenURI", {"_id": txInfoCurrent.nft_id})).json()
 
                             # check if json ok - if not skip and move on
                             if "error" in tokenInfo:
-                                #todo: send to log webhook
-                                print("token info contains 'error'..")
+                                #send to log webhook
+                                err_msg = "block_height: " + block_height
+                                err_msg += "\ntxHash: " + tx["txHash"]
+                                err_msg += "\nmethod: " + method
+                                err_msg += "\nERROR: token info contains 'error'"
+                                webhook = DiscordWebhook(url=discord_webhook, rate_limit_retry=True, content=err_msg)
+                                response = webhook.execute()
                                 continue
 
                             # get token info
@@ -96,7 +108,7 @@ while True:
                             if len(token.info) > 0:
                                 sleep(5)
                                 #print(token.image_url)
-                                webhook = DiscordWebhook(url=token.discord_webhook)
+                                webhook = DiscordWebhook(url=token.discord_webhook, rate_limit_retry=True)
                                 embed = DiscordEmbed(title=token.title, description=token.generate_discord_info(), color=token.set_color())
                                 embed.set_thumbnail(url=token.image_url)
                                 embed.set_footer(text=token.footer)
@@ -104,7 +116,14 @@ while True:
                                 webhook.add_embed(embed)
                                 response = webhook.execute()
                         except:
-                            print("Error: {}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno))
+                            #send to log webhook
+                            err_msg = "block_height: " + block_height
+                            err_msg += "\ntxHash: " + tx["txHash"]
+                            err_msg += "\nmethod: " + method
+                            err_msg += "\nERROR: {}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno)
+                            webhook = DiscordWebhook(url=discord_webhook, rate_limit_retry=True, content=err_msg)
+                            response = webhook.execute()
+                            #print("Error: {}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno))
                             continue
 
             block_height += 1

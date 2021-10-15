@@ -45,7 +45,7 @@ class IcxBlock:
 class TxInfo:
     def __init__(self, tx: json) -> None:
         self.txHash = str(tx["txHash"])
-        self.contract = str(tx["to"])
+        self.contract = GangstaBetCx #str(tx["to"])
         self.address = str(tx["from"])
         #self.timestamp = datetime.fromtimestamp(tx["timestamp"] / 1000000).replace(microsecond=0).isoformat()
         self.timestamp = int(tx["timestamp"] / 1000000)

@@ -56,7 +56,7 @@ class GBToken:
             self.info += "\nAddress: " + self.address
             self.info += "\nPrice: " + txInfo.get_transfer_gbet()
             self.info += "\n"
-            self.info += "\nSkills levelled up:"
+            self.info += "\nSkills upgraded by:"
             self.info += "\n" + self.get_skills_upgrade()
         
         self.info += "\n[Check it out](" + self.external_url + ")"
@@ -72,15 +72,25 @@ class GBToken:
     def get_skills_upgrade(self) -> str:
         s = self.nft_update.replace('{', '').replace('}', '').replace('"', '')
 
-        if self.type == "Gangster":
-            skills = ["racketeering", "shooting", "gambling", "intelligence", "strategy"]
-        elif self.type == "Detective":
-            skills = ["logic", "critical thinking", "incorruptible", "attention to detail", "intelligence"]
+        if self.type == "Gangster" and self.class_name == "Rumrunner":
+            skills = ["Racketeering", "Shooting", "Gambling", "Physicality", "Street smarts"]
+        elif self.type == "Gangster" and self.class_name == "Pokerstar":
+            skills = ["Racketeering", "Shooting", "Gambling", "Intelligence", "Strategy"]
+        elif self.type == "Gangster" and self.class_name == "Commander":
+            skills = ["Racketeering", "Shooting", "Gambling", "Leadership", "Street smarts"]
+        elif self.type == "Gangster" and self.class_name == "Brute":
+            skills = ["Racketeering", "Shooting", "Gambling", "Physicality", "Intimidation"]
+        elif self.type == "Gangster" and self.class_name == "Marksman":
+            skills = ["Racketeering", "Shooting", "Gambling", "Patience", "Intelligence"]
+        elif self.type == "Detective" and self.class_name == "Brains":
+            skills = ["Logic", "Critical thinking", "Incorruptible", "Attention to detail", "Intelligence"]
+        elif self.type == "Detective" and self.class_name == "Investigator":
+            skills = ["Logic", "Critical thinking", "Incorruptible", "Imagination", "Intuition"]
 
         for n in range(5):
             s = s.replace(str(n+1) + ":", skills[n] + ": ")
 
-        skills_print_out = "\n".join(str(v) for v in s.split(","))
+        skills_print_out = "\n".join("- " + str(v) for v in s.split(","))
         return skills_print_out
 
     def generate_discord_info(self) -> str:

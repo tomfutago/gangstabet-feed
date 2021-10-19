@@ -27,9 +27,13 @@ class GBToken:
         self.info = "\n"
 
         # set destination discord channel
-        if txInfo.method == "set_nft_characters":
+        if txInfo.method == "set_nft_characters" or txInfo.method == "set_price" or txInfo.method == "buy":
             self.discord_webhook = os.getenv("DISCORD_MARKET_WEBHOOK")
-        elif txInfo.method == "claim_allocated_amt" or txInfo.method == "change_name" or txInfo.method == "increase_status_level":
+        elif txInfo.method == "claim_allocated_amt":
+            self.discord_webhook = os.getenv("DISCORD_CLAIM_GBET_WEBHOOK")
+        elif txInfo.method == "change_name":
+            self.discord_webhook = os.getenv("DISCORD_CHANGE_NAME_WEBHOOK")
+        elif txInfo.method == "increase_status_level":
             self.discord_webhook = os.getenv("DISCORD_SKILLS_WEBHOOK")
         else:
             self.discord_webhook = os.getenv("DISCORD_LOG_WEBHOOK")
@@ -58,6 +62,20 @@ class GBToken:
             self.info += "\n"
             self.info += "\nSkills upgraded by:"
             self.info += "\n" + self.get_skills_upgrade()
+        elif txInfo.method == "set_price" and txInfo.cost != "0.00 ICX":
+            self.title = "GangstaBet on the market!"
+            self.footer = "Listed on "
+            self.info += "\nAddress: " + self.address
+            self.info += "\nPrice: " + txInfo.cost
+        elif txInfo.method == "set_price" and txInfo.cost == "0.00 ICX":
+            self.title = "GangstaBet delisted!"
+            self.footer = "Delisted on "
+            self.info += "\nAddress: " + self.address
+        elif txInfo.method == "buy":
+            self.title = "GangstaBet sold!"
+            self.footer = "Sold on "
+            self.info += "\nHappy owner: " + self.address
+            self.info += "\nPrice: " + txInfo.cost
         
         self.info += "\n[Check it out](" + self.external_url + ")"
 

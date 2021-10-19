@@ -10,6 +10,7 @@ from iconsdk.exception import JSONRPCException
 GangstaBetCx = "cx384018e03aa8b739472c7a0645b70df97550e2c2"
 GangstaBetSkillCx = "cx2dc662031f3d62bcdba4f63e9bf827767c847565"
 GangstaBetTokenCx = "cx6139a27c15f1653471ffba0b4b88dc15de7e3267"
+GangstaBetMarketCx = "cx8683d50b9f53275081e13b64fba9d6a56b7c575d"
 
 # connect to ICON main-net
 icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io", 3))
@@ -72,6 +73,17 @@ class TxInfo:
             self.nft_info = str("")
             self.nft_id = int(tx["data"]["params"]["nft_id"])
             self.nft_update = str(tx["data"]["params"]["skill_inc_mapping"])
+        elif self.method == "set_price":
+            self.cost = "{:.2f}".format(int(tx["data"]["params"]["nft_info"]) / 10 ** 18) + " ICX"
+            self.nft_info = str("")
+            self.nft_id = hex_to_int(tx["data"]["params"]["nft_id"])
+            self.nft_update = str("")
+        elif self.method == "buy":
+            self.cost = "{:.2f}".format(int(tx["value"]) / 10 ** 18) + " ICX"
+            self.nft_info = str("")
+            self.nft_id = hex_to_int(tx["data"]["params"]["nft_id"])
+            self.nft_update = str("")
+
 
     def get_gb_id(self) -> int:
         found = re.search('{\"(.+?)\":', self.nft_info)
@@ -86,7 +98,7 @@ class TxInfo:
         if found:
             gb_apiurl = found.group(1)
         else:
-            gb_apiurl = -1
+            gb_apiurl = ""
         return gb_apiurl
 
     def get_transfer_gbet(self) -> str:

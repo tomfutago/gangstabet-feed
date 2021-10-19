@@ -24,6 +24,7 @@ discord_webhook = os.getenv("DISCORD_LOG_WEBHOOK")
 GangstaBetCx = "cx384018e03aa8b739472c7a0645b70df97550e2c2"
 GangstaBetSkillCx = "cx2dc662031f3d62bcdba4f63e9bf827767c847565"
 GangstaBetTokenCx = "cx6139a27c15f1653471ffba0b4b88dc15de7e3267"
+GangstaBetMarketCx = "cx8683d50b9f53275081e13b64fba9d6a56b7c575d"
 
 # connect to ICON main-net
 icon_service = IconService(HTTPProvider("https://ctz.solidwallet.io", 3))
@@ -63,13 +64,13 @@ while True:
         try:
             for tx in block["confirmed_transaction_list"]:
                 if "to" in tx:
-                    if tx["to"] == GangstaBetCx or tx["to"] == GangstaBetSkillCx:
+                    if tx["to"] == GangstaBetCx or tx["to"] == GangstaBetSkillCx or tx["to"] == GangstaBetMarketCx:
                         try:
                             # check if tx uses expected method - if not skip and move on
                             method = tx["data"]["method"]
                             #print("block:", block_height, "method:", method, "processing..")
 
-                            expected_methods = ["set_nft_characters", "change_name", "claim_allocated_amt", "increase_status_level"]
+                            expected_methods = ["set_nft_characters", "change_name", "claim_allocated_amt", "increase_status_level", "set_price", "buy"]
                             if method not in expected_methods:
                                 continue
 

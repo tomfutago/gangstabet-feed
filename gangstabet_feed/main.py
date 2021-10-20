@@ -64,7 +64,7 @@ while True:
         try:
             for tx in block["confirmed_transaction_list"]:
                 if "to" in tx:
-                    if tx["to"] == GangstaBetCx or tx["to"] == GangstaBetSkillCx or tx["to"] == GangstaBetMarketCx:
+                    if tx["to"] == GangstaBetCx or tx["to"] == GangstaBetSkillCx: # or tx["to"] == GangstaBetMarketCx:
                         try:
                             # check if tx uses expected method - if not skip and move on
                             method = tx["data"]["method"]

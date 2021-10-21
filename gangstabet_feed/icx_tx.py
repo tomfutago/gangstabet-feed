@@ -74,7 +74,7 @@ class TxInfo:
             self.nft_id = int(tx["data"]["params"]["nft_id"])
             self.nft_update = str(tx["data"]["params"]["skill_inc_mapping"])
         elif self.method == "set_price":
-            self.cost = "{:.2f}".format(int(tx["data"]["params"]["nft_info"]) / 10 ** 18) + " ICX"
+            self.cost = "{:.2f}".format(int(tx["data"]["params"]["price"]) / 10 ** 18) + " ICX"
             self.nft_info = str("")
             self.nft_id = hex_to_int(tx["data"]["params"]["nft_id"])
             self.nft_update = str("")

@@ -36,22 +36,8 @@ def call(to, method, params):
     return result
 
 
-#block_height = 40806977
-#block_height = 40731695 # failure
-#block_height = 40848877
-#block = icon_service.get_block(block_height)
-#print(json.dumps(block, indent = 4))
-#txHash = "0xf714c23e791432bfd1e65e109267eca4ba3ec0b420c8d83965720a23cfeca888"
-#txResult = icon_service.get_transaction_result(txHash)
-#print(txResult["eventLogs"])
-
-
 # latest block height
 block_height = icon_service.get_block("latest")["height"]
-
-#block_height = 40731481 # start block with first claimed GBs
-#block_height = 40858594 # fairly recent
-#block_height = 40861708
 
 while True:
     try:
@@ -64,7 +50,7 @@ while True:
         try:
             for tx in block["confirmed_transaction_list"]:
                 if "to" in tx:
-                    if tx["to"] == GangstaBetCx or tx["to"] == GangstaBetSkillCx: # or tx["to"] == GangstaBetMarketCx:
+                    if tx["to"] == GangstaBetCx or tx["to"] == GangstaBetSkillCx or tx["to"] == GangstaBetMarketCx:
                         try:
                             # check if tx uses expected method - if not skip and move on
                             method = tx["data"]["method"]
@@ -107,8 +93,7 @@ while True:
                             token = gb_token.GBToken(txInfoCurrent, tokenInfo)
 
                             if len(token.info) > 0:
-                                sleep(5)
-                                #print(token.image_url)
+                                sleep(3)
                                 webhook = DiscordWebhook(url=token.discord_webhook, rate_limit_retry=True)
                                 embed = DiscordEmbed(title=token.title, description=token.generate_discord_info(), color=token.set_color())
                                 embed.set_thumbnail(url=token.image_url)

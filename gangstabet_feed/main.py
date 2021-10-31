@@ -35,6 +35,16 @@ def call(to, method, params):
     result = icon_service.call(call)
     return result
 
+# function for sending error msg to discord webhook
+def send_log_to_webhook(block_height: int, txHash: str, method: str, error: str):
+    err_msg = "block_height: " + str(block_height)
+    err_msg += "\ntxHash: " + txHash
+    err_msg += "\nmethod: " + method
+    err_msg += "\nERROR: " + error
+    webhook = DiscordWebhook(url=discord_webhook, rate_limit_retry=True, content=err_msg)
+    response = webhook.execute()
+    return response
+
 
 # latest block height
 block_height = icon_service.get_block("latest")["height"]
@@ -68,48 +78,43 @@ while True:
                             # status : 1 on success, 0 on failure
                             if txResult["status"] == 0:
                                 continue
-                            
-                            # pull token details - if gb_id cannot be retrieved (-1) skip and move on
-                            #if txInfoCurrent.get_gb_id() == -1:
-                            #    #todo: send to log webhook
-                            #    continue
-                            #tokenInfo = requests.get(txInfoCurrent.get_gb_apiurl()).json()
-                            #tokenCharacterInfo = call(txInfoCurrent.contract, "get_character_info", {"nft_id": txInfoCurrent.get_gb_id()})
 
                             tokenInfo = requests.get(call(txInfoCurrent.contract, "tokenURI", {"_id": txInfoCurrent.nft_id})).json()
 
                             # check if json ok - if not skip and move on
                             if "error" in tokenInfo:
                                 #send to log webhook
-                                err_msg = "block_height: " + block_height
-                                err_msg += "\ntxHash: " + tx["txHash"]
-                                err_msg += "\nmethod: " + method
-                                err_msg += "\nERROR: token info contains 'error'"
-                                webhook = DiscordWebhook(url=discord_webhook, rate_limit_retry=True, content=err_msg)
-                                response = webhook.execute()
+                                response = send_log_to_webhook(block_height, tx["txHash"], method, "token info contains 'error'")
                                 continue
 
                             # get token info
                             token = gb_token.GBToken(txInfoCurrent, tokenInfo)
 
                             if len(token.info) > 0:
-                                sleep(3)
+                                # download token gif
+                                #filename = "temp.gif"
+                                #request = requests.get(token.image_url, stream=True)
+                                #if request.status_code == 200:
+                                #    with open(filename, "wb") as image:
+                                #        for chunk in request:
+                                #            image.write(chunk)
+                                
+                                # send discord msg
                                 webhook = DiscordWebhook(url=token.discord_webhook, rate_limit_retry=True)
                                 embed = DiscordEmbed(title=token.title, description=token.generate_discord_info(), color=token.set_color())
                                 embed.set_thumbnail(url=token.image_url)
+                                #embed.set_thumbnail(url="attachment://" + filename)
                                 embed.set_footer(text=token.footer)
                                 embed.set_timestamp(token.timestamp)
                                 webhook.add_embed(embed)
                                 response = webhook.execute()
+                                
+                                # delete temp gif
+                                #os.remove(filename)
                         except:
                             #send to log webhook
-                            err_msg = "block_height: " + block_height
-                            err_msg += "\ntxHash: " + tx["txHash"]
-                            err_msg += "\nmethod: " + method
-                            err_msg += "\nERROR: {}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno)
-                            webhook = DiscordWebhook(url=discord_webhook, rate_limit_retry=True, content=err_msg)
-                            response = webhook.execute()
-                            #print("Error: {}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno))
+                            err_msg = "{}. {}, line: {}".format(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2].tb_lineno)
+                            response = send_log_to_webhook(block_height, tx["txHash"], method, err_msg)
                             continue
 
             block_height += 1

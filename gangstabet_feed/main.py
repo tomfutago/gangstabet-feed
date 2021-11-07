@@ -41,6 +41,7 @@ def send_log_to_webhook(block_height: int, txHash: str, method: str, error: str)
     err_msg += "\ntxHash: " + txHash
     err_msg += "\nmethod: " + method
     err_msg += "\nERROR: " + error
+    err_msg += "\n"
     webhook = DiscordWebhook(url=discord_webhook, rate_limit_retry=True, content=err_msg)
     response = webhook.execute()
     return response
@@ -70,15 +71,20 @@ while True:
                             if method not in expected_methods:
                                 continue
 
-                            # create instance of current transaction
-                            txInfoCurrent = icx_tx.TxInfo(tx)
+                            # add delay to avoid error msg below after ICON 2.0 upgrade
+                            # iconsdk.exception.JSONRPCException: {'code': -31003, 'message': 'Executing : Executing'}
+                            sleep(2)
 
                             # check if tx was successful - if not skip and move on
-                            txResult = icon_service.get_transaction_result(txInfoCurrent.txHash)
+                            txResult = icon_service.get_transaction_result(tx["txHash"])
                             # status : 1 on success, 0 on failure
                             if txResult["status"] == 0:
                                 continue
 
+                            # create instance of current transaction
+                            txInfoCurrent = icx_tx.TxInfo(tx)
+
+                            # pull token info
                             tokenInfo = requests.get(call(txInfoCurrent.contract, "tokenURI", {"_id": txInfoCurrent.nft_id})).json()
 
                             # check if json ok - if not skip and move on
